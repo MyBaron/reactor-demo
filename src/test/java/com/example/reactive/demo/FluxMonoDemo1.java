@@ -84,4 +84,23 @@ public class FluxMonoDemo1 {
         Thread.currentThread().join(10000);
 
     }
+
+    @DisplayName("zip操作符")
+    @Test
+    public void test3() throws InterruptedException {
+        Flux.zip(
+                getZipDescFlux(),
+                Flux.interval(Duration.ofMillis(200))
+        ).subscribe(t -> System.out.println(t.getT1()));
+
+        Thread.currentThread().join(10000);
+
+    }
+
+    private Flux<String> getZipDescFlux() {
+        String desc = "Zip two sources together, that is to say wait for all the sources to emit one element and combine these elements once into a Tuple2.";
+        return Flux.fromArray(desc.split("\\s+"));  // 1
+    }
+
+
 }
