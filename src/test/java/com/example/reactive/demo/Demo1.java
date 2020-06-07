@@ -3,11 +3,17 @@ package com.example.reactive.demo;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
+import reactor.test.publisher.TestPublisher;
 
 import java.util.concurrent.Flow;
 import java.util.concurrent.SubmissionPublisher;
 import java.util.concurrent.TimeUnit;
+
+import static reactor.test.publisher.TestPublisher.Violation.ALLOW_NULL;
 
 /**
  * demo1
@@ -27,6 +33,7 @@ public class Demo1 {
         //创建订阅者
         Flow.Subscriber<Integer> subscriber = new Flow.Subscriber<>() {
 
+            // 回压机制的使用核心
             private Flow.Subscription subscription;
 
             @Override
@@ -166,6 +173,34 @@ public class Demo1 {
         public void onComplete() {
             System.out.println("Processor,完成了");
         }
+    }
+
+
+    @Test
+    @DisplayName("switchIfEmpty使用")
+    public void testSwitchIfEmpty() {
+         Flux.just(1, 2, 3, 4).flatMap(k -> {
+            if (k == 1) {
+                return Mono.empty();
+            }
+            return Mono.just(k);
+        }).log()
+                .switchIfEmpty(Mono.just(99))
+                .log()
+                .subscribe(System.out::println);
+
+        Flux.empty().switchIfEmpty(Mono.just(99)).log().subscribe(System.out::println);
+
+        int sum = Flux.just(1, 2, 3)
+                .flatMap(s -> Mono.just(s))
+                .toStream().mapToInt(s -> s).sum();
+        System.out.println(sum);
+
+
+//        StepVerifier.create(log)
+//                .expectNextCount(3)
+//                .verifyComplete();
+
     }
 
 }
